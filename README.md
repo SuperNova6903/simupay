@@ -134,10 +134,7 @@ For production deployment, you can use services like:
 
 See deployment guides for each platform for detailed instructions.
 
-## License
-
-ISC
 
 ## Author
 
-Your Name
+Siddhant Jagtap
