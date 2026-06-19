@@ -98,41 +98,57 @@ The frontend will open at `http://localhost:3000` and the backend runs at `http:
 
 ## Deployment
 
-### Deploying to GitHub
+### 🚀 Deploy for FREE (Complete Guides Included!)
 
-1. Create a new repository on GitHub
-2. Initialize git in the project:
-   ```bash
-   git init
-   ```
+We provide complete step-by-step deployment guides:
 
-3. Add all files:
-   ```bash
-   git add .
-   ```
+#### **Backend: Render.com (FREE)**
+- See: `RENDER_DEPLOYMENT_GUIDE.md`
+- ✅ Completely free tier
+- ✅ GitHub auto-deploy
+- ✅ Perfect for Node.js apps
+- ✅ No credit card required (for free tier)
 
-4. Create initial commit:
-   ```bash
-   git commit -m "Initial commit"
-   ```
+#### **Frontend: Vercel.com (FREE)**
+- See: `VERCEL_FRONTEND_GUIDE.md`
+- ✅ Unlimited free deployments
+- ✅ Global CDN included
+- ✅ GitHub auto-deploy
+- ✅ Blazing fast React hosting
 
-5. Add remote repository:
-   ```bash
-   git remote add origin https://github.com/yourusername/simupay.git
-   ```
+#### **Database: MongoDB Atlas (FREE)**
+- ✅ 512 MB storage
+- ✅ Fully managed
+- ✅ Perfect for prototyping
 
-6. Push to GitHub:
-   ```bash
-   git push -u origin main
-   ```
+### Quick Start Deployment
 
-### Deploying to Production
+```bash
+# 1. Push code to GitHub (if not done)
+git add .
+git commit -m "Ready for deployment"
+git push origin main
 
-For production deployment, you can use services like:
-- **Frontend**: Vercel, Netlify
-- **Backend**: Render, Heroku, Railway, or Fly.io
+# 2. Deploy Backend to Render
+# → Follow: RENDER_DEPLOYMENT_GUIDE.md
 
-See deployment guides for each platform for detailed instructions.
+# 3. Deploy Frontend to Vercel
+# → Follow: VERCEL_FRONTEND_GUIDE.md
+```
+
+### Deployment Options
+
+| Platform | Service | Cost | Guide |
+|----------|---------|------|-------|
+| **Render** | Backend (Node.js) | FREE ✅ | `RENDER_DEPLOYMENT_GUIDE.md` |
+| **Vercel** | Frontend (React) | FREE ✅ | `VERCEL_FRONTEND_GUIDE.md` |
+| **MongoDB Atlas** | Database | FREE ✅ | Included in guides |
+
+**Total Cost: $0** - Your app is live on the internet!
+
+### Alternative Options
+- Backend: Heroku (paid), Railway (paid), Fly.io
+- Frontend: Netlify, AWS Amplify
 
 
 ## Author

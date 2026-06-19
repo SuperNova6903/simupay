@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: simupay-backend
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: MONGO_URI
+        scope: run
+      - key: JWT_SECRET
+        scope: run
+      - key: NODE_ENV
+        value: production
