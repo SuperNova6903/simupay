@@ -8,6 +8,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({ status: 'Backend is running', timestamp: new Date().toISOString() });
+});
+
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/simupay', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
