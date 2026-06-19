@@ -41,4 +41,12 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.get('/user', (req, res) => {
+  const token = req.header('Authorization');
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+  res.json({ message: 'User route working', token });
+});
+
 module.exports = router;
