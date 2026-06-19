@@ -13,10 +13,8 @@ app.get('/', (req, res) => {
   res.json({ status: 'Backend is running', timestamp: new Date().toISOString() });
 });
 
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/simupay', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log('MongoDB connected'))
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/simupay')
+  .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
 app.use('/api/auth', require('./routes/auth'));
