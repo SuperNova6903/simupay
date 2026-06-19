@@ -16,3 +16,12 @@ dist/
 # Logs
 *.log
 
+# Deployment guides (kept locally, not in repo)
+DEPLOYMENT_GUIDE.md
+RENDER_DEPLOYMENT_GUIDE.md
+VERCEL_FRONTEND_GUIDE.md
+DEPLOYMENT_CHECKLIST.md
+QUICK_DEPLOY.md
+RAILWAY_GUIDE.md
+START_HERE.md
+
