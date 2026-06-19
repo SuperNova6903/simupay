@@ -13,7 +13,8 @@ const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5001/api/auth/signup', { username, email, password });
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      await axios.post(`${apiUrl}/api/auth/signup`, { username, email, password });
       setSuccess('Account created successfully!');
       setTimeout(() => navigate('/'), 2000);
     } catch (err) {

@@ -13,8 +13,9 @@ const Dashboard = ({ token, setToken }) => {
 
   const fetchTransactions = async () => {
     try {
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
       const res = await axios.get(
-        "http://localhost:5001/api/transactions/history",
+        `${apiUrl}/api/transactions/history`,
         {
           headers: { Authorization: token },
         },
@@ -34,8 +35,9 @@ const Dashboard = ({ token, setToken }) => {
     setMessage("");
     setError("");
     try {
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
       const res = await axios.post(
-        "http://localhost:5001/api/simulate/transfer",
+        `${apiUrl}/api/simulate/transfer`,
         { receiverEmail, amount },
         { headers: { Authorization: token } },
       );

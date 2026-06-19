@@ -11,7 +11,8 @@ const Login = ({ setToken }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5001/api/auth/login', { email, password });
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const res = await axios.post(`${apiUrl}/api/auth/login`, { email, password });
       localStorage.setItem('token', res.data.token);
       setToken(res.data.token);
       navigate('/dashboard');
