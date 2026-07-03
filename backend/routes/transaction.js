@@ -1,15 +1,51 @@
-const router = require('express').Router();
-const Transaction = require('../models/Transaction');
-const auth = require('../middleware/auth');
+const router = require("express").Router();
+const prisma = require("../prisma/client");
+const auth = require("../middleware/auth");
 
-router.get('/history', auth, async (req, res) => {
+router.get("/history", auth, async (req, res) => {
   try {
-    const transactions = await Transaction.find({ sender: req.user._id })
-      .populate('receiver', 'username email')
-      .sort({ createdAt: -1 });
+    const transactions =
+      await prisma.transaction.findMany({
+        where: {
+          OR: [
+            {
+              senderId: req.user.id,
+            },
+            {
+              receiverId: req.user.id,
+            },
+          ],
+        },
+
+        include: {
+          sender: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
+          },
+
+          receiver: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
+          },
+        },
+
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
     res.status(200).json(transactions);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 

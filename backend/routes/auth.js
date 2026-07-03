@@ -1,52 +1,135 @@
-const router = require('express').Router();
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+const router = require("express").Router();
+const prisma = require("../prisma/client");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const auth = require("../middleware/auth");
 
-router.post('/signup', async (req, res) => {
+router.post("/signup", async (req, res) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: "All fields are required" });
     }
-    
-    let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: 'User already exists' });
+    const normalizedUsername = username.trim();
 
-    user = new User({ username, email, password });
-    await user.save();
+    if (!normalizedUsername) {
+      return res.status(400).json({
+        message: "Username is required",
+      });
+    }
+    const normalizedEmail = email.toLowerCase().trim();
 
-    res.status(201).json({ message: 'User created successfully', user });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-
-    if (user.password !== password) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Invalid email",
+      });
     }
 
-    const token = jwt.sign({ _id: user._id, email: user.email }, process.env.JWT_SECRET || 'jwt_secret_key', {
-      expiresIn: '1h',
+    let user = await prisma.user.findUnique({
+      where: {
+        email: normalizedEmail,
+      },
+    });
+    if (user) return res.status(409).json({ message: "User already exists" });
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user = await prisma.user.create({
+      data: {
+        username: normalizedUsername,
+        email: normalizedEmail,
+        password: hashedPassword,
+      },
     });
 
-    res.header('Authorization', token).json({ token, user: { id: user._id, username: user.username, email: user.email, balance: user.balance } });
+    res.status(201).json({
+      message: "User created successfully",
+      user: { id: user.id, username: user.username, email: user.email },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/user', (req, res) => {
-  const token = req.header('Authorization');
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await prisma.user.findUnique({
+      where: {
+        email: normalizedEmail,
+      },
+    });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+
+    const valid = await bcrypt.compare(password, user.password);
+
+    if (!valid) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET || "jwt_secret_key",
+      {
+        expiresIn: "1h",
+      },
+    );
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        balance: user.balance,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json({ message: 'User route working', token });
+});
+
+router.get("/user", auth, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.user.id,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        balance: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+    });
+  }
 });
 
 module.exports = router;
