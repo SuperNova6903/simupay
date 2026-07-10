@@ -4,6 +4,16 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const auth = require("../middleware/auth");
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite:
+    process.env.NODE_ENV === "production"
+      ? "none"
+      : "lax",
+  maxAge: 60 * 60 * 1000,
+};
+
 router.post("/signup", async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -73,7 +83,7 @@ router.post("/login", async (req, res) => {
         email: normalizedEmail,
       },
     });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
     const valid = await bcrypt.compare(password, user.password);
 
@@ -89,8 +99,10 @@ router.post("/login", async (req, res) => {
       },
     );
 
+    res.cookie("token", token, cookieOptions);
+
     res.json({
-      token,
+      message: "Login successful",
       user: {
         id: user.id,
         username: user.username,
@@ -101,6 +113,14 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", cookieOptions);
+
+  res.json({
+    message: "Logged out successfully",
+  });
 });
 
 router.get("/user", auth, async (req, res) => {

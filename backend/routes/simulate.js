@@ -9,7 +9,6 @@ router.post("/transfer", auth, validate, async (req, res) => {
     const { receiverEmail, amount } = req.body;
 
     const parsedAmount = Number(amount);
-
     const normalizedReceiverEmail =
       receiverEmail.toLowerCase().trim();
 
@@ -19,6 +18,10 @@ router.post("/transfer", auth, validate, async (req, res) => {
     const sender = await prisma.user.findUnique({
       where: {
         id: req.user.id,
+      },
+      select: {
+        id: true,
+        email: true,
       },
     });
 
@@ -31,6 +34,10 @@ router.post("/transfer", auth, validate, async (req, res) => {
     const receiver = await prisma.user.findUnique({
       where: {
         email: normalizedReceiverEmail,
+      },
+      select: {
+        id: true,
+        email: true,
       },
     });
 
@@ -47,45 +54,42 @@ router.post("/transfer", auth, validate, async (req, res) => {
     }
 
     const result = await prisma.$transaction(async (tx) => {
-      // Re-fetch inside transaction to avoid stale balances
-      const currentSender = await tx.user.findUnique({
+
+      /*
+       * Atomic debit:
+       *
+       * UPDATE User
+       * SET balance = balance - totalCost
+       * WHERE id = sender.id
+       * AND balance >= totalCost
+       */
+
+      const debitResult = await tx.user.updateMany({
         where: {
           id: sender.id,
+          balance: {
+            gte: totalCost,
+          },
+        },
+        data: {
+          balance: {
+            decrement: totalCost,
+          },
         },
       });
 
-      const currentReceiver = await tx.user.findUnique({
-        where: {
-          id: receiver.id,
-        },
-      });
-
-      if (!currentSender || !currentReceiver) {
-        throw new Error("USER_NOT_FOUND");
-      }
-
-      const senderBalance = Number(currentSender.balance);
-      const receiverBalance = Number(currentReceiver.balance);
-
-      if (senderBalance < totalCost) {
+      if (debitResult.count === 0) {
         throw new Error("INSUFFICIENT_FUNDS");
       }
 
-      const updatedSender = await tx.user.update({
-        where: {
-          id: sender.id,
-        },
-        data: {
-          balance: senderBalance - totalCost,
-        },
-      });
-
-      await tx.user.update({
+      const updatedReceiver = await tx.user.update({
         where: {
           id: receiver.id,
         },
         data: {
-          balance: receiverBalance + parsedAmount,
+          balance: {
+            increment: parsedAmount,
+          },
         },
       });
 
@@ -94,14 +98,23 @@ router.post("/transfer", auth, validate, async (req, res) => {
           senderId: sender.id,
           receiverId: receiver.id,
           amount: parsedAmount,
-          fee: fee,
+          fee,
           status: "COMPLETED",
         },
       });
 
+      const updatedSender = await tx.user.findUnique({
+        where: {
+          id: sender.id,
+        },
+        select: {
+          balance: true,
+        },
+      });
+
       return {
-        updatedSender,
         transaction,
+        updatedSender,
       };
     });
 
@@ -112,21 +125,18 @@ router.post("/transfer", auth, validate, async (req, res) => {
     });
 
   } catch (err) {
+
     if (err.message === "INSUFFICIENT_FUNDS") {
       return res.status(400).json({
-        message: "Insufficient balance (includes 2% transfer fee)",
-      });
-    }
-
-    if (err.message === "USER_NOT_FOUND") {
-      return res.status(404).json({
-        message: "User not found during transaction",
+        message:
+          "Insufficient balance (includes 2% transfer fee)",
       });
     }
 
     res.status(500).json({
       error: err.message,
     });
+
   }
 });
 
