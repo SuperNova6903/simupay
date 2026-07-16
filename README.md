@@ -1,10 +1,10 @@
 # SimuPay - Payment Simulation Application
 
-A full-stack MERN (MongoDB, Express, React, Node.js) application for simulating payment transactions. SimuPay allows users to register, login, and simulate payment transactions with virtual money.
+A full-stack React, Express, Prisma, and PostgreSQL application for simulating payment transactions. SimuPay allows users to register, login, and simulate payment transactions with virtual money.
 
 ## Features
 
-- User authentication (Register/Login with JWT)
+- User authentication with short-lived access tokens and rotating refresh tokens in HttpOnly cookies
 - Payment simulation
 - Transaction history
 - Dashboard with balance tracking
@@ -12,7 +12,7 @@ A full-stack MERN (MongoDB, Express, React, Node.js) application for simulating 
 ## Tech Stack
 
 - **Frontend**: React 18, React Router DOM, Axios
-- **Backend**: Node.js, Express.js, MongoDB (Mongoose)
+- **Backend**: Node.js, Express.js, PostgreSQL (Prisma)
 - **Authentication**: JWT (JSON Web Tokens)
 - **Password Hashing**: bcryptjs
 
@@ -63,8 +63,9 @@ simupay/
 
 4. Create `.env` file in backend directory:
    ```env
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret_key
+   DATABASE_URL=your_postgresql_connection_string
+   ACCESS_TOKEN_SECRET=your_long_random_access_secret
+   REFRESH_TOKEN_SECRET=your_different_long_random_refresh_secret
    PORT=5000
    ```
 
@@ -85,16 +86,17 @@ The frontend will open at `http://localhost:3000` and the backend runs at `http:
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
+- `POST /api/auth/signup` - Register new user
 - `POST /api/auth/login` - Login user
+- `POST /api/auth/refresh` - Rotate the refresh token and issue a new access token
+- `POST /api/auth/logout` - Revoke the active refresh token and clear auth cookies
 - `GET /api/auth/user` - Get current user
 
 ### Transactions
-- `GET /api/transactions` - Get user transactions
-- `POST /api/transactions` - Create new transaction
+- `GET /api/transactions/history` - Get user transactions
 
 ### Simulation
-- `POST /api/simulate/payment` - Simulate payment
+- `POST /api/simulate/transfer` - Simulate payment
 
 ## Deployment
 

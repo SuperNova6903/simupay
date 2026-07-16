@@ -19,8 +19,6 @@ const Dashboard = ({ user, setUser }) => {
       const res = await api.get("/api/transactions/history");
 
       setTransactions(res.data);
-    } catch (err) {
-      console.error(err);
     } finally {
       setLoadingTransactions(false);
     }
@@ -67,8 +65,6 @@ const Dashboard = ({ user, setUser }) => {
   const handleLogout = async () => {
     try {
       await api.post("/api/auth/logout");
-    } catch (err) {
-      console.error(err);
     } finally {
       setUser(null);
       navigate("/");
