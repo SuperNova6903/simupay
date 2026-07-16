@@ -19,12 +19,13 @@ enum TransactionStatus {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String
-  email     String   @unique
-  password  String
-  balance   Decimal  @default(500.00)
-  createdAt DateTime @default(now())
+  id                 Int      @id @default(autoincrement())
+  username           String
+  email              String   @unique
+  password           String
+  balance            Decimal  @default(500.00)
+  hashedRefreshToken String?
+  createdAt          DateTime @default(now())
 
   sentTransactions     Transaction[] @relation("SentTransactions")
   receivedTransactions Transaction[] @relation("ReceivedTransactions")
@@ -45,4 +46,7 @@ model Transaction {
 
   sender   User @relation("SentTransactions", fields: [senderId], references: [id])
   receiver User @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+
+  @@index([senderId, createdAt])
+  @@index([receiverId, createdAt])
 }

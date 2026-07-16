@@ -1,20 +1,28 @@
 const jwt = require("jsonwebtoken");
+const { createError } = require("../utils/errors");
+const {
+  assertTokenSecrets,
+  ACCESS_TOKEN_COOKIE,
+  getAccessTokenSecret,
+} = require("../utils/tokens");
 
 module.exports = (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token)
-    return res
-      .status(401)
-      .json({ message: "Access Denied. No token provided." });
+  const token = req.cookies[ACCESS_TOKEN_COOKIE];
+  if (!token) {
+    return next(createError("Access denied. No access token provided.", 401));
+  }
 
   try {
-    if (!process.env.JWT_SECRET) {
-      throw new Error("JWT_SECRET not configured");
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    assertTokenSecrets();
+  } catch (err) {
+    return next(err);
+  }
+
+  try {
+    const decoded = jwt.verify(token, getAccessTokenSecret());
     req.user = decoded;
     next();
   } catch (ex) {
-    res.status(400).json({ message: "Invalid token." });
+    next(createError("Invalid or expired access token.", 401));
   }
 };

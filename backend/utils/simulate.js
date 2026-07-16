@@ -1,5 +1,7 @@
+const TRANSFER_FEE_RATE = 0.02;
+
 const calculateFee = (amount) => {
-  return amount * 0.02; // 2% simulation fee
+  return amount * TRANSFER_FEE_RATE;
 };
 
-module.exports = { calculateFee };
+module.exports = { calculateFee, TRANSFER_FEE_RATE };
