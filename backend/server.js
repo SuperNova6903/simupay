@@ -25,6 +25,7 @@ app.get("/", (req, res) => {
 
 
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/account", require("./routes/account"));
 app.use("/api/simulate", require("./routes/simulate"));
 app.use("/api/transactions", require("./routes/transaction"));
 app.use(notFound);

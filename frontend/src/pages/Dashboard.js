@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 const Dashboard = ({ user, setUser }) => {
   const [receiverEmail, setReceiverEmail] = useState("");
   const [amount, setAmount] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -22,6 +24,15 @@ const Dashboard = ({ user, setUser }) => {
     } finally {
       setLoadingTransactions(false);
     }
+  };
+
+  const refreshCurrentUser = async () => {
+    const res = await api.get("/api/auth/user");
+    setUser(res.data);
+  };
+
+  const refreshDashboardData = async () => {
+    await Promise.all([refreshCurrentUser(), fetchTransactions()]);
   };
 
   useEffect(() => {
@@ -48,17 +59,27 @@ const Dashboard = ({ user, setUser }) => {
 
       setMessage(res.data.message);
 
-      setUser({
-        ...user,
-        balance: res.data.newBalance,
-      });
-
       setReceiverEmail("");
       setAmount("");
 
-      await fetchTransactions();
+      await refreshDashboardData();
     } catch (err) {
       setError(err.response?.data?.message || "Transaction failed");
+    }
+  };
+
+  const handleAccountOperation = async (e, endpoint, value, clearValue) => {
+    e.preventDefault();
+    setMessage("");
+    setError("");
+
+    try {
+      const res = await api.post(endpoint, { amount: value });
+      setMessage(res.data.message);
+      clearValue("");
+      await refreshDashboardData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Account operation failed");
     }
   };
 
@@ -113,6 +134,54 @@ const Dashboard = ({ user, setUser }) => {
         <button type="submit">Transfer (2% Fee)</button>
       </form>
 
+      <form
+        onSubmit={(e) => handleAccountOperation(
+          e,
+          "/api/account/deposit",
+          depositAmount,
+          setDepositAmount,
+        )}
+        className="transfer-form"
+      >
+        <h3>Deposit</h3>
+
+        <input
+          type="number"
+          placeholder="Amount"
+          value={depositAmount}
+          onChange={(e) => setDepositAmount(e.target.value)}
+          min="0.01"
+          step="0.01"
+          required
+        />
+
+        <button type="submit">Deposit</button>
+      </form>
+
+      <form
+        onSubmit={(e) => handleAccountOperation(
+          e,
+          "/api/account/withdraw",
+          withdrawAmount,
+          setWithdrawAmount,
+        )}
+        className="transfer-form"
+      >
+        <h3>Withdraw</h3>
+
+        <input
+          type="number"
+          placeholder="Amount"
+          value={withdrawAmount}
+          onChange={(e) => setWithdrawAmount(e.target.value)}
+          min="0.01"
+          step="0.01"
+          required
+        />
+
+        <button type="submit">Withdraw</button>
+      </form>
+
       <div className="transactions-list">
         <h3>Transaction History</h3>
 
@@ -123,17 +192,27 @@ const Dashboard = ({ user, setUser }) => {
         ) : (
           <ul>
             {transactions.map((tx) => {
-              const sent = tx.sender.id === user.id;
+              const isDeposit = tx.type === "DEPOSIT";
+              const isWithdrawal = tx.type === "WITHDRAWAL";
+              const sent = tx.sender?.id === user.id;
+              const counterparty = sent ? tx.receiver?.email : tx.sender?.email;
 
               return (
                 <li key={tx.id}>
-                  <p>
-                    <strong>{sent ? "To" : "From"}:</strong>{" "}
-                    {sent ? tx.receiver.email : tx.sender.email}
-                  </p>
+                  {isDeposit ? (
+                    <p><strong>Deposit</strong></p>
+                  ) : isWithdrawal ? (
+                    <p><strong>Withdrawal</strong></p>
+                  ) : (
+                    <p>
+                      <strong>{sent ? "To" : "From"}:</strong>{" "}
+                      {counterparty}
+                    </p>
+                  )}
 
                   <p>
-                    <strong>Amount:</strong> {sent ? "-" : "+"}$
+                    <strong>Amount:</strong>{" "}
+                    {isWithdrawal || sent ? "-" : "+"}$
                     {Number(tx.amount).toFixed(2)}
                   </p>
 

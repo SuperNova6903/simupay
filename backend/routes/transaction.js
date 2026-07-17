@@ -13,6 +13,7 @@ router.get("/history", auth, asyncHandler(async (req, res) => {
     },
     select: {
       id: true,
+      type: true,
       senderId: true,
       receiverId: true,
       amount: true,

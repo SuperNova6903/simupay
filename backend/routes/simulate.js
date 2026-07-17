@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { TransactionStatus } = require("@prisma/client");
+const { Prisma, TransactionStatus, TransactionType } = require("@prisma/client");
 const prisma = require("../prisma/client");
 const auth = require("../middleware/auth");
 const validate = require("../middleware/validate");
@@ -8,10 +8,10 @@ const { calculateFee } = require("../utils/simulate");
 
 router.post("/transfer", auth, validate, asyncHandler(async (req, res) => {
   const { receiverEmail, amount } = req.body;
-  const parsedAmount = Number(amount);
+  const parsedAmount = new Prisma.Decimal(amount);
   const normalizedReceiverEmail = receiverEmail.toLowerCase().trim();
   const fee = calculateFee(parsedAmount);
-  const totalCost = parsedAmount + fee;
+  const totalCost = parsedAmount.plus(fee);
 
   const sender = await prisma.user.findUnique({
     where: { id: req.user.id },
@@ -48,6 +48,7 @@ router.post("/transfer", auth, validate, asyncHandler(async (req, res) => {
 
     const transaction = await tx.transaction.create({
       data: {
+        type: TransactionType.TRANSFER,
         senderId: sender.id,
         receiverId: receiver.id,
         amount: parsedAmount,
@@ -56,6 +57,7 @@ router.post("/transfer", auth, validate, asyncHandler(async (req, res) => {
       },
       select: {
         id: true,
+        type: true,
         senderId: true,
         receiverId: true,
         amount: true,

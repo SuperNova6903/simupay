@@ -18,6 +18,12 @@ enum TransactionStatus {
   FAILED
 }
 
+enum TransactionType {
+  TRANSFER
+  DEPOSIT
+  WITHDRAWAL
+}
+
 model User {
   id                 Int      @id @default(autoincrement())
   username           String
@@ -32,20 +38,21 @@ model User {
 }
 
 model Transaction {
-  id         Int      @id @default(autoincrement())
+  id         Int             @id @default(autoincrement())
+  type       TransactionType @default(TRANSFER)
 
-  senderId   Int
-  receiverId Int
+  senderId   Int?
+  receiverId Int?
 
   amount     Decimal
   fee        Decimal
 
   status     TransactionStatus @default(COMPLETED)
 
-  createdAt  DateTime @default(now())
+  createdAt  DateTime          @default(now())
 
-  sender   User @relation("SentTransactions", fields: [senderId], references: [id])
-  receiver User @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+  sender   User? @relation("SentTransactions", fields: [senderId], references: [id])
+  receiver User? @relation("ReceivedTransactions", fields: [receiverId], references: [id])
 
   @@index([senderId, createdAt])
   @@index([receiverId, createdAt])
